@@ -121,7 +121,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
       if (payPromise != null) {
         if (requestCode == LOAD_MASKED_WALLET_REQUEST_CODE) { // Unique, identifying constant
-          Log.d(TAG, "onActivityResult: LOAD_FULL_WALLET -> RESULT_OK");
+          Log.d(TAG, "onActivityResult: LOAD_MASKED_WALLET_REQUEST -> RESULT_OK");
           handleLoadMascedWaletRequest(resultCode, data);
 
         } else if (requestCode == LOAD_FULL_WALLET_REQUEST_CODE) {
@@ -497,7 +497,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
   }
 
   private MaskedWalletRequest createWalletRequest(final String estimatedTotalPrice, final String currencyCode, final Boolean shippingAddressRequired, final ArrayList<CountrySpecification> countries) {
-    Log.d(TAG, "createWalletRequest");
+    Log.d(TAG, "createWalletRequest: -> publicKey:" + publicKey);
     final MaskedWalletRequest maskedWalletRequest = MaskedWalletRequest.newBuilder()
 
       // Request credit card tokenization with Stripe by specifying tokenization parameters:
