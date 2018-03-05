@@ -252,6 +252,16 @@ RCT_EXPORT_METHOD(createSourceWithParams:(NSDictionary *)params
 
     NSString *sourceType = params[@"type"];
     STPSourceParams *sourceParams;
+  
+    if ([sourceType isEqualToString:@"card"]) {
+      STPCardParams *cardParams = [[STPCardParams alloc] init];
+      cardParams.number = params[@"number"];
+      cardParams.cvc = params[@"cvc"];
+      cardParams.expYear = [[params objectForKey:@"expYear"] unsignedIntegerValue];
+      cardParams.expMonth = [[params objectForKey:@"expMonth"] unsignedIntegerValue];
+      sourceParams = [STPSourceParams cardParamsWithCard:cardParams];
+    }
+  
     if ([sourceType isEqualToString:@"bancontact"]) {
          sourceParams = [STPSourceParams bancontactParamsWithAmount:[[params objectForKey:@"amount"] unsignedIntegerValue] name:params[@"name"] returnURL:params[@"returnURL"] statementDescriptor:params[@"statementDescriptor"]];
     }
@@ -623,6 +633,7 @@ RCT_EXPORT_METHOD(openApplePaySetup) {
     [result setValue:source.currency forKey:@"currency"];
     [result setValue:@(source.livemode) forKey:@"livemode"];
     [result setValue:source.amount forKey:@"amount"];
+    [result setValue:source.stripeID forKey:@"id"];
 
     // Flow
     [result setValue:[self sourceFlow:source.flow] forKey:@"flow"];
@@ -853,6 +864,8 @@ RCT_EXPORT_METHOD(openApplePaySetup) {
             return @"sofort";
         case STPSourceTypeThreeDSecure:
             return @"threeDSecure";
+        case STPSourceTypeCard:
+            return @"card";
         case STPSourceTypeAlipay:
             return @"alipay";
         case STPSourceTypeUnknown:
