@@ -71,7 +71,7 @@ import java.util.ArrayList;
 public class StripeModule extends ReactContextBaseJavaModule {
 
 
-  private static final String TAG = StripeModule.class.getSimpleName();
+  private static final String TAG = "### StripeModule: ";
   private static final String MODULE_NAME = "StripeModule";
 
   private static final int LOAD_MASKED_WALLET_REQUEST_CODE = 100502;
@@ -121,11 +121,12 @@ public class StripeModule extends ReactContextBaseJavaModule {
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
       if (payPromise != null) {
         if (requestCode == LOAD_MASKED_WALLET_REQUEST_CODE) { // Unique, identifying constant
-
+          Log.d(TAG, "onActivityResult: LOAD_FULL_WALLET -> RESULT_OK");
           handleLoadMascedWaletRequest(resultCode, data);
 
         } else if (requestCode == LOAD_FULL_WALLET_REQUEST_CODE) {
           if (resultCode == Activity.RESULT_OK) {
+            Log.e(TAG, "onActivityResult: LOAD_FULL_WALLET -> RESULT_OK");
             FullWallet fullWallet = data.getParcelableExtra(WalletConstants.EXTRA_FULL_WALLET);
             String tokenJSON = fullWallet.getPaymentMethodToken().getToken();
             Token token = Token.fromString(tokenJSON);
@@ -134,6 +135,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
               Log.e(TAG, "onActivityResult: failed to create token from JSON string.");
               payPromise.reject("JsonParsingError", "Failed to create token from JSON string.");
             } else {
+              Log.e(TAG, "onActivityResult: token != null, resolving promise!");
               payPromise.resolve(convertTokenToWritableMap(token));
             }
           }
@@ -167,7 +169,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
     }
 
     publicKey = options.getString("publishableKey");
-
+    Log.d(TAG, "init -> publicKey:" + publicKey);
     stripe = new Stripe(getReactApplicationContext(), publicKey);
   }
 
@@ -449,6 +451,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
 
   private void startApiClientAndAndroidPay(final Activity activity, final ReadableMap map) {
     if (googleApiClient != null && googleApiClient.isConnected()) {
+      Log.d(TAG, "startAndroidPay #1");
       startAndroidPay(map);
     } else {
       googleApiClient = new GoogleApiClient.Builder(activity)
@@ -456,6 +459,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
           @Override
           public void onConnected(@Nullable Bundle bundle) {
             Log.d(TAG, "onConnected: ");
+            Log.d(TAG, "startAndroidPay #2");
             startAndroidPay(map);
           }
 
@@ -489,10 +493,11 @@ public class StripeModule extends ReactContextBaseJavaModule {
     final ArrayList<CountrySpecification> allowedCountries = getAllowedShippingCountries(map);
     final MaskedWalletRequest maskedWalletRequest = createWalletRequest(estimatedTotalPrice, currencyCode, shippingAddressRequired, allowedCountries);
     Wallet.Payments.loadMaskedWallet(googleApiClient, maskedWalletRequest, LOAD_MASKED_WALLET_REQUEST_CODE);
+    Log.d(TAG, "startAndroidPay, inside method, loadMaskedWallet fired!");
   }
 
   private MaskedWalletRequest createWalletRequest(final String estimatedTotalPrice, final String currencyCode, final Boolean shippingAddressRequired, final ArrayList<CountrySpecification> countries) {
-
+    Log.d(TAG, "createWalletRequest");
     final MaskedWalletRequest maskedWalletRequest = MaskedWalletRequest.newBuilder()
 
       // Request credit card tokenization with Stripe by specifying tokenization parameters:
@@ -509,6 +514,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
       .setEstimatedTotalPrice(estimatedTotalPrice)
       .setCurrencyCode(currencyCode)
       .build();
+    Log.d(TAG, "WalletRequest created.");
     return maskedWalletRequest;
   }
 
@@ -568,9 +574,10 @@ public class StripeModule extends ReactContextBaseJavaModule {
         .setCart(cartBuilder.build())
         .setGoogleTransactionId(maskedWallet.getGoogleTransactionId())
         .build();
-
+      Log.d(TAG, "handleLoadMascedWaletRequest: loadFullWallet!");
       Wallet.Payments.loadFullWallet(googleApiClient, fullWalletRequest, LOAD_FULL_WALLET_REQUEST_CODE);
     } else {
+      Log.d(TAG, "WalletRequest created.");
       payPromise.reject(PURCHASE_CANCELLED, "Purchase was cancelled");
     }
   }
@@ -608,7 +615,7 @@ public class StripeModule extends ReactContextBaseJavaModule {
               Log.d(TAG, "onResult: booleanResult.getValue()");
               showAndroidPay(map);
             } else {
-              Log.d(TAG, "onResult: !booleanResult.getValue()");
+              Log.d(TAG, "onResult: !booleanResult.getValue() - FAILED!");
               // Hide Android Pay buttons, show a message that Android Pay
               // cannot be used yet, and display a traditional checkout button
               androidPayUnavaliableDialog();
